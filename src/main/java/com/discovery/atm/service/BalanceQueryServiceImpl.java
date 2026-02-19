@@ -11,6 +11,7 @@ import com.discovery.atm.exception.NoAccountsToDisplayException;
 import com.discovery.atm.mapper.CurrencyAccountMapper;
 import com.discovery.atm.mapper.TransactionalAccountMapper;
 import com.discovery.atm.repository.BalanceQueryRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
@@ -80,6 +81,6 @@ public class BalanceQueryServiceImpl implements BalanceQueryService {
     }
 
     private ResultDto successResult() {
-        return new ResultDto(true, 200, "Success");
+        return new ResultDto(true, HttpStatus.OK.value(), "Success");
     }
 }

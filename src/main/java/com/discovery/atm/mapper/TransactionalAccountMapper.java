@@ -12,6 +12,8 @@ public class TransactionalAccountMapper {
 
     private static final BigDecimal CHQ_OVERDRAFT_LIMIT = new BigDecimal("10000.000");
     private static final BigDecimal ZERO = new BigDecimal("0.000");
+    public static final String INDICATOR_MULTIPLY = "*";
+    public static final String INDICATOR_DIVIDE = "/";
 
     public TransactionalAccountDto toDto(TransactionalAccountRow row) {
         BigDecimal balance = scale3(row.displayBalance());
@@ -45,10 +47,10 @@ public class TransactionalAccountMapper {
         BigDecimal safeAmount = scale3(amount);
         BigDecimal safeRate = defaultRate(rate);
 
-        if ("*".equals(indicator)) {
+        if (INDICATOR_MULTIPLY.equals(indicator)) {
             return scale3(safeAmount.multiply(safeRate));
         }
-        if ("/".equals(indicator)) {
+        if (INDICATOR_DIVIDE.equals(indicator)) {
             if (safeRate.compareTo(BigDecimal.ZERO) == 0) {
                 return ZERO;
             }
