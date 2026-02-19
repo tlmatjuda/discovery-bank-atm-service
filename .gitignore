@@ -35,3 +35,9 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### H2 Data Files ###
+src/main/resources/data/*.mv.db
+src/main/resources/data/*.lock.db
+src/main/resources/data/*.trace.db
+
