@@ -1,8 +1,8 @@
 # Discovery Bank ATM Service
 
 Spring Boot 3.5 (Java 17) REST API for:
-- transactional balance queries
-- foreign currency balance queries (with ZAR conversion)
+- Transactional balance queries
+- Foreign currency balance queries (with ZAR conversion)
 - ATM withdrawals with denomination-aware dispensing
 - SQL reporting deliverables
 

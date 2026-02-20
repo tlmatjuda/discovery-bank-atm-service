@@ -151,10 +151,4 @@ public class NoteDispensingAlgorithm {
     ) {
     }
 
-    public record DispenseComputation(
-            boolean exact,
-            BigDecimal dispensedAmount,
-            List<DispenseLine> lines
-    ) {
-    }
 }

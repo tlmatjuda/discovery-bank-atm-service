@@ -35,8 +35,7 @@ public class BalanceQueryServiceImpl implements BalanceQueryService {
 
     @Override
     public TransactionalBalancesResponseDto queryTransactionalBalances(Long clientId) {
-        ClientDto client = balanceQueryRepository.findClientById(clientId)
-                .orElseThrow(InvalidClientException::new);
+        ClientDto client = findClientOrThrow(clientId);
 
         List<TransactionalAccountDto> accounts = balanceQueryRepository
                 .findTransactionalAccountsByClientId(clientId)
@@ -58,8 +57,7 @@ public class BalanceQueryServiceImpl implements BalanceQueryService {
 
     @Override
     public CurrencyBalancesResponseDto queryCcyBalances(Long clientId) {
-        ClientDto client = balanceQueryRepository.findClientById(clientId)
-                .orElseThrow(InvalidClientException::new);
+        ClientDto client = findClientOrThrow(clientId);
 
         List<CurrencyAccountDto> accounts = balanceQueryRepository
                 .findCurrencyAccountsByClientId(clientId)
@@ -81,5 +79,10 @@ public class BalanceQueryServiceImpl implements BalanceQueryService {
 
     private ResultDto successResult() {
         return new ResultDto(true, HttpStatus.OK.value(), "Success");
+    }
+
+    private ClientDto findClientOrThrow(Long clientId) {
+        return balanceQueryRepository.findClientById(clientId)
+                .orElseThrow(InvalidClientException::new);
     }
 }

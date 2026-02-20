@@ -1,5 +1,6 @@
 package com.discovery.atm.service;
 
+import com.discovery.atm.algorithm.DispenseComputation;
 import com.discovery.atm.algorithm.NoteDispensingAlgorithm;
 import com.discovery.atm.dto.ClientDto;
 import com.discovery.atm.dto.DispensedDenominationDto;
@@ -23,9 +24,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
+import java.util.function.Predicate;
 
 @Service
 public class WithdrawalServiceImpl implements WithdrawalService {
+
+    private static final String SUCCESS_REASON = "Success";
 
     private final BalanceQueryRepository balanceQueryRepository;
     private final WithdrawalRepository withdrawalRepository;
@@ -48,38 +52,74 @@ public class WithdrawalServiceImpl implements WithdrawalService {
     public WithdrawResponseDto withdraw(WithdrawRequestDto request) {
         Long clientId = request.clientId();
         Long atmId = request.atmId();
+        BigDecimal requiredAmount = scaleMoney(request.requiredAmount());
 
-        ClientDto client = balanceQueryRepository.findClientById(clientId)
+        // 1) Validate actor/account/ATM upfront.
+        ClientDto client = findClientOrThrow(clientId);
+        WithdrawAccountRow accountRow = findTransactionalAccountOrThrow(clientId, request.accountNumber());
+        List<AtmNoteAllocationRow> noteAllocations = findFundedAtmNoteAllocationsOrThrow(atmId);
+
+        // 2) Validate money rules before touching state.
+        validateSufficientFunds(accountRow, requiredAmount);
+        DispenseComputation dispenseComputation = computeExactDispenseOrThrow(noteAllocations, requiredAmount);
+
+        // 3) Persist account + ATM updates in a single transaction.
+        BigDecimal newBalance = applyWithdrawalUpdates(accountRow, atmId, requiredAmount, dispenseComputation);
+
+        return buildWithdrawResponse(client, accountRow, newBalance, dispenseComputation);
+    }
+
+    private ClientDto findClientOrThrow(Long clientId) {
+        return balanceQueryRepository.findClientById(clientId)
                 .orElseThrow(InvalidClientException::new);
+    }
 
-        WithdrawAccountRow accountRow = withdrawalRepository
-                .findTransactionalAccountForClient(clientId, request.accountNumber())
+    private WithdrawAccountRow findTransactionalAccountOrThrow(Long clientId, String accountNumber) {
+        return withdrawalRepository
+                .findTransactionalAccountForClient(clientId, accountNumber)
                 .orElseThrow(InvalidAccountNumberException::new);
+    }
 
-        validateAtm(atmId);
-
-        List<AtmNoteAllocationRow> noteAllocations = withdrawalRepository.findNoteAllocationsByAtmId(atmId);
-        if (noteAllocations.isEmpty() || noteAllocations.stream().noneMatch(a -> a.count() != null && a.count() > 0)) {
+    private List<AtmNoteAllocationRow> findFundedAtmNoteAllocationsOrThrow(Long atmId) {
+        if (!withdrawalRepository.atmExists(atmId)) {
             throw new AtmNotRegisteredOrUnfundedException();
         }
 
-        BigDecimal requiredAmount = request.requiredAmount().setScale(2, RoundingMode.HALF_UP);
+        List<AtmNoteAllocationRow> noteAllocations = withdrawalRepository.findNoteAllocationsByAtmId(atmId);
+        Predicate<AtmNoteAllocationRow> hasPositiveNoteCound = a -> a.count() != null && a.count() > 0;
+        boolean hasAnyNotes = noteAllocations.stream().anyMatch(hasPositiveNoteCound);
+        if (!hasAnyNotes) {
+            throw new AtmNotRegisteredOrUnfundedException();
+        }
+        return noteAllocations;
+    }
+
+    private void validateSufficientFunds(WithdrawAccountRow accountRow, BigDecimal requiredAmount) {
         BigDecimal availableFunds = withdrawAccountMapper.calculateAvailableFunds(accountRow);
         if (requiredAmount.compareTo(availableFunds) > 0) {
             throw new InsufficientFundsException();
         }
+    }
 
-        NoteDispensingAlgorithm.DispenseComputation dispenseComputation =
-                noteDispensingAlgorithm.compute(noteAllocations, requiredAmount);
-
+    private DispenseComputation computeExactDispenseOrThrow(
+            List<AtmNoteAllocationRow> noteAllocations,
+            BigDecimal requiredAmount
+    ) {
+        DispenseComputation dispenseComputation = noteDispensingAlgorithm.compute(noteAllocations, requiredAmount);
         if (!dispenseComputation.exact()) {
-            BigDecimal suggested = dispenseComputation.dispensedAmount().setScale(2, RoundingMode.HALF_UP);
-            throw new AmountNotAvailableException(
-                    "Amount not available, would you like to draw <R " + suggested + ">"
-            );
+            throw amountNotAvailableForSuggestedValue(dispenseComputation.dispensedAmount());
         }
+        return dispenseComputation;
+    }
 
+    private BigDecimal applyWithdrawalUpdates(
+            WithdrawAccountRow accountRow,
+            Long atmId,
+            BigDecimal requiredAmount,
+            DispenseComputation dispenseComputation
+    ) {
         BigDecimal newBalance = accountRow.displayBalance().subtract(requiredAmount).setScale(3, RoundingMode.HALF_UP);
+
         int updatedAccountRows = withdrawalRepository.updateAccountBalance(accountRow.accountNumber(), newBalance);
         if (updatedAccountRows != 1) {
             throw new InvalidAccountNumberException();
@@ -91,14 +131,20 @@ public class WithdrawalServiceImpl implements WithdrawalService {
                     line.denominationId(),
                     line.count()
             );
-
             if (updatedAllocationRows != 1) {
-                throw new AmountNotAvailableException("Amount not available, would you like to draw <R "
-                        + dispenseComputation.dispensedAmount().setScale(2, RoundingMode.HALF_UP) + ">"
-                );
+                throw amountNotAvailableForSuggestedValue(dispenseComputation.dispensedAmount());
             }
         }
 
+        return newBalance;
+    }
+
+    private WithdrawResponseDto buildWithdrawResponse(
+            ClientDto client,
+            WithdrawAccountRow accountRow,
+            BigDecimal newBalance,
+            DispenseComputation dispenseComputation
+    ) {
         WithdrawAccountDto account = withdrawAccountMapper.toDto(accountRow, newBalance);
         List<DispensedDenominationDto> denominations = dispenseComputation.lines().stream()
                 .map(line -> new DispensedDenominationDto(
@@ -108,17 +154,15 @@ public class WithdrawalServiceImpl implements WithdrawalService {
                 ))
                 .toList();
 
-        return new WithdrawResponseDto(
-                client,
-                account,
-                denominations,
-                new ResultDto(true, 200, "Success")
-        );
+        return new WithdrawResponseDto(client, account, denominations, new ResultDto(true, 200, SUCCESS_REASON));
     }
 
-    private void validateAtm(Long atmId) {
-        if (!withdrawalRepository.atmExists(atmId)) {
-            throw new AtmNotRegisteredOrUnfundedException();
-        }
+    private AmountNotAvailableException amountNotAvailableForSuggestedValue(BigDecimal suggestedAmount) {
+        BigDecimal suggested = scaleMoney(suggestedAmount);
+        return new AmountNotAvailableException("Amount not available, would you like to draw <R " + suggested + ">");
+    }
+
+    private BigDecimal scaleMoney(BigDecimal amount) {
+        return amount.setScale(2, RoundingMode.HALF_UP);
     }
 }
