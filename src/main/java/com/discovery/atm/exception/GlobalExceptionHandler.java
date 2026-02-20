@@ -9,6 +9,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -22,6 +23,11 @@ public class GlobalExceptionHandler {
             MethodArgumentTypeMismatchException.class})
     public ResponseEntity<ErrorResponseDto> handleValidationExceptions(Exception exception) {
         return buildResponse(HttpStatus.BAD_REQUEST, "Invalid request");
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ErrorResponseDto> handleNotFound(NoResourceFoundException exception) {
+        return buildResponse(HttpStatus.NOT_FOUND, "Resource not found");
     }
 
     @ExceptionHandler(Exception.class)

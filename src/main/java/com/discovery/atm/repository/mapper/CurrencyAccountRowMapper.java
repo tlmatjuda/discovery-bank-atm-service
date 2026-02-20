@@ -10,7 +10,7 @@ public final class CurrencyAccountRowMapper {
 
     public static RowMapper<CurrencyAccountRow> rowMapper() {
         return (rs, rowNum) -> new CurrencyAccountRow(
-                rs.getLong("CLIENT_ACCOUNT_NUMBER"),
+                rs.getString("CLIENT_ACCOUNT_NUMBER"),
                 rs.getString("ACCOUNT_TYPE_CODE"),
                 rs.getString("ACCOUNT_TYPE_DESCRIPTION"),
                 rs.getString("CURRENCY_CODE"),

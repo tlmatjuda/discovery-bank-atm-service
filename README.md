@@ -67,7 +67,7 @@ curl --location 'http://localhost:8088/discovery-atm/queryTransactionalBalances?
   },
   "accounts": [
     {
-      "accountNumber": 4067342946,
+      "accountNumber": "4067342946",
       "typeCode": "CHQ",
       "accountTypeDescription": "Cheque Account",
       "currencyCode": "ZAR",
@@ -103,7 +103,7 @@ curl --location 'http://localhost:8088/discovery-atm/queryCcyBalances?clientId=1
   },
   "accounts": [
     {
-      "accountNumber": 9164010053,
+      "accountNumber": "9164010053",
       "typeCode": "CFCA",
       "accountTypeDescription": "Customer Foreign Currency Account",
       "currencyCode": "AUD",

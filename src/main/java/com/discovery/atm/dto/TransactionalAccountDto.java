@@ -3,7 +3,7 @@ package com.discovery.atm.dto;
 import java.math.BigDecimal;
 
 public record TransactionalAccountDto(
-        Long accountNumber,
+        String accountNumber,
         String typeCode,
         String accountTypeDescription,
         String currencyCode,

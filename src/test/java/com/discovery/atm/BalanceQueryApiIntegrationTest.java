@@ -35,9 +35,9 @@ class BalanceQueryApiIntegrationTest {
                         .param("clientId", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.success").value(true))
-                .andExpect(jsonPath("$.accounts[0].accountNumber").value(4067342946L))
-                .andExpect(jsonPath("$.accounts[1].accountNumber").value(5027913218L))
-                .andExpect(jsonPath("$.accounts[2].accountNumber").value(1053664521L));
+                .andExpect(jsonPath("$.accounts[0].accountNumber").value("4067342946"))
+                .andExpect(jsonPath("$.accounts[1].accountNumber").value("5027913218"))
+                .andExpect(jsonPath("$.accounts[2].accountNumber").value("1053664521"));
     }
 
     @Test
@@ -46,8 +46,8 @@ class BalanceQueryApiIntegrationTest {
                         .param("clientId", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.success").value(true))
-                .andExpect(jsonPath("$.accounts[0].accountNumber").value(9164010053L))
-                .andExpect(jsonPath("$.accounts[1].accountNumber").value(9760793578L))
-                .andExpect(jsonPath("$.accounts[2].accountNumber").value(9755978035L));
+                .andExpect(jsonPath("$.accounts[0].accountNumber").value("9164010053"))
+                .andExpect(jsonPath("$.accounts[1].accountNumber").value("9760793578"))
+                .andExpect(jsonPath("$.accounts[2].accountNumber").value("9755978035"));
     }
 }
