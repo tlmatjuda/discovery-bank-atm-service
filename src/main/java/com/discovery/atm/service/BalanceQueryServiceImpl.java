@@ -27,8 +27,7 @@ public class BalanceQueryServiceImpl implements BalanceQueryService {
     public BalanceQueryServiceImpl(
             BalanceQueryRepository balanceQueryRepository,
             TransactionalAccountMapper transactionalAccountMapper,
-            CurrencyAccountMapper currencyAccountMapper
-    ) {
+            CurrencyAccountMapper currencyAccountMapper) {
         this.balanceQueryRepository = balanceQueryRepository;
         this.transactionalAccountMapper = transactionalAccountMapper;
         this.currencyAccountMapper = currencyAccountMapper;
