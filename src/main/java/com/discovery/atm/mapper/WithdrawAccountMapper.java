@@ -1,5 +1,6 @@
 package com.discovery.atm.mapper;
 
+import com.discovery.atm.constant.DomainConstants;
 import com.discovery.atm.dto.WithdrawAccountDto;
 import com.discovery.atm.repository.row.WithdrawAccountRow;
 import org.springframework.stereotype.Component;
@@ -33,14 +34,14 @@ public class WithdrawAccountMapper {
 
     public BigDecimal calculateAvailableFunds(WithdrawAccountRow row) {
         BigDecimal balance = scale3(row.displayBalance());
-        if ("CHQ".equalsIgnoreCase(row.typeCode())) {
+        if (DomainConstants.ACCOUNT_TYPE_CHQ.equalsIgnoreCase(row.typeCode())) {
             return balance.add(CHQ_OVERDRAFT_LIMIT);
         }
         return balance;
     }
 
     private BigDecimal resolveAccountLimit(String typeCode, BigDecimal accountLimit) {
-        if ("CHQ".equalsIgnoreCase(typeCode)) {
+        if (DomainConstants.ACCOUNT_TYPE_CHQ.equalsIgnoreCase(typeCode)) {
             return CHQ_OVERDRAFT_LIMIT;
         }
         if (accountLimit != null) {
@@ -53,10 +54,10 @@ public class WithdrawAccountMapper {
         BigDecimal safeAmount = scale3(amount);
         BigDecimal safeRate = defaultRate(rate);
 
-        if ("*".equals(indicator)) {
+        if (DomainConstants.CONVERSION_INDICATOR_MULTIPLY.equals(indicator)) {
             return scale3(safeAmount.multiply(safeRate));
         }
-        if ("/".equals(indicator)) {
+        if (DomainConstants.CONVERSION_INDICATOR_DIVIDE.equals(indicator)) {
             if (safeRate.compareTo(BigDecimal.ZERO) == 0) {
                 return ZERO;
             }

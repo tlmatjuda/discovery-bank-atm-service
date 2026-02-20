@@ -1,5 +1,6 @@
 package com.discovery.atm.mapper;
 
+import com.discovery.atm.constant.DomainConstants;
 import com.discovery.atm.dto.CurrencyAccountDto;
 import com.discovery.atm.repository.row.CurrencyAccountRow;
 import org.springframework.stereotype.Component;
@@ -33,10 +34,10 @@ public class CurrencyAccountMapper {
         BigDecimal safeAmount = scale3(amount);
         BigDecimal safeRate = defaultRate(rate);
 
-        if ("*".equals(indicator)) {
+        if (DomainConstants.CONVERSION_INDICATOR_MULTIPLY.equals(indicator)) {
             return scale3(safeAmount.multiply(safeRate));
         }
-        if ("/".equals(indicator)) {
+        if (DomainConstants.CONVERSION_INDICATOR_DIVIDE.equals(indicator)) {
             if (safeRate.compareTo(BigDecimal.ZERO) == 0) {
                 return ZERO;
             }

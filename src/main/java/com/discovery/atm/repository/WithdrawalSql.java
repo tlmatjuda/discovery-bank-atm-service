@@ -1,5 +1,7 @@
 package com.discovery.atm.repository;
 
+import com.discovery.atm.constant.DomainConstants;
+
 public final class WithdrawalSql {
 
     private WithdrawalSql() {
@@ -31,20 +33,19 @@ public final class WithdrawalSql {
             WHERE ATM_ID = :atmId
             """;
 
-    public static final String FIND_NOTE_ALLOCATIONS_BY_ATM_ID_SQL = """
-            SELECT
-                aa.ATM_ALLOCATION_ID,
-                aa.ATM_ID,
-                aa.DENOMINATION_ID,
-                d.DENOMINATION_VALUE,
-                aa.COUNT
-            FROM ATM_ALLOCATION aa
-            JOIN DENOMINATION d ON d.DENOMINATION_ID = aa.DENOMINATION_ID
-            JOIN DENOMINATION_TYPE dt ON dt.DENOMINATION_TYPE_CODE = d.DENOMINATION_TYPE_CODE
-            WHERE aa.ATM_ID = :atmId
-              AND dt.DENOMINATION_TYPE_CODE = 'N'
-            ORDER BY d.DENOMINATION_VALUE DESC
-            """;
+    public static final String FIND_NOTE_ALLOCATIONS_BY_ATM_ID_SQL =
+            "SELECT\n"
+                    + "    aa.ATM_ALLOCATION_ID,\n"
+                    + "    aa.ATM_ID,\n"
+                    + "    aa.DENOMINATION_ID,\n"
+                    + "    d.DENOMINATION_VALUE,\n"
+                    + "    aa.COUNT\n"
+                    + "FROM ATM_ALLOCATION aa\n"
+                    + "JOIN DENOMINATION d ON d.DENOMINATION_ID = aa.DENOMINATION_ID\n"
+                    + "JOIN DENOMINATION_TYPE dt ON dt.DENOMINATION_TYPE_CODE = d.DENOMINATION_TYPE_CODE\n"
+                    + "WHERE aa.ATM_ID = :atmId\n"
+                    + "  AND dt.DENOMINATION_TYPE_CODE = '" + DomainConstants.DENOMINATION_TYPE_NOTE + "'\n"
+                    + "ORDER BY d.DENOMINATION_VALUE DESC";
 
     public static final String UPDATE_ACCOUNT_BALANCE_SQL = """
             UPDATE CLIENT_ACCOUNT

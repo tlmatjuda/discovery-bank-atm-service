@@ -86,8 +86,8 @@ public class WithdrawalServiceImpl implements WithdrawalService {
         }
 
         List<AtmNoteAllocationRow> noteAllocations = withdrawalRepository.findNoteAllocationsByAtmId(atmId);
-        Predicate<AtmNoteAllocationRow> hasPositiveNoteCound = a -> a.count() != null && a.count() > 0;
-        boolean hasAnyNotes = noteAllocations.stream().anyMatch(hasPositiveNoteCound);
+        Predicate<AtmNoteAllocationRow> hasPositiveNoteCount = a -> a.count() != null && a.count() > 0;
+        boolean hasAnyNotes = noteAllocations.stream().anyMatch(hasPositiveNoteCount);
         if (!hasAnyNotes) {
             throw new AtmNotRegisteredOrUnfundedException();
         }

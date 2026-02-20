@@ -1,5 +1,6 @@
 package com.discovery.atm.mapper;
 
+import com.discovery.atm.constant.DomainConstants;
 import com.discovery.atm.dto.TransactionalAccountDto;
 import com.discovery.atm.repository.row.TransactionalAccountRow;
 import org.springframework.stereotype.Component;
@@ -12,8 +13,6 @@ public class TransactionalAccountMapper {
 
     private static final BigDecimal CHQ_OVERDRAFT_LIMIT = new BigDecimal("10000.000");
     private static final BigDecimal ZERO = new BigDecimal("0.000");
-    public static final String INDICATOR_MULTIPLY = "*";
-    public static final String INDICATOR_DIVIDE = "/";
 
     public TransactionalAccountDto toDto(TransactionalAccountRow row) {
         BigDecimal balance = scale3(row.displayBalance());
@@ -34,7 +33,7 @@ public class TransactionalAccountMapper {
     }
 
     private BigDecimal resolveAccountLimit(String typeCode, BigDecimal accountLimit) {
-        if ("CHQ".equalsIgnoreCase(typeCode)) {
+        if (DomainConstants.ACCOUNT_TYPE_CHQ.equalsIgnoreCase(typeCode)) {
             return CHQ_OVERDRAFT_LIMIT;
         }
         if (accountLimit != null) {
@@ -47,10 +46,10 @@ public class TransactionalAccountMapper {
         BigDecimal safeAmount = scale3(amount);
         BigDecimal safeRate = defaultRate(rate);
 
-        if (INDICATOR_MULTIPLY.equals(indicator)) {
+        if (DomainConstants.CONVERSION_INDICATOR_MULTIPLY.equals(indicator)) {
             return scale3(safeAmount.multiply(safeRate));
         }
-        if (INDICATOR_DIVIDE.equals(indicator)) {
+        if (DomainConstants.CONVERSION_INDICATOR_DIVIDE.equals(indicator)) {
             if (safeRate.compareTo(BigDecimal.ZERO) == 0) {
                 return ZERO;
             }

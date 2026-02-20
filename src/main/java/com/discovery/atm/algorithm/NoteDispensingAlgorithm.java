@@ -15,10 +15,12 @@ public class NoteDispensingAlgorithm {
     private static final int INF = 1_000_000;
 
     public DispenseComputation compute(List<AtmNoteAllocationRow> noteAllocations, BigDecimal requiredAmount) {
+        // Work in 10-rand units so note math stays integer and coin values are naturally excluded.
         int requiredCents = toCents(requiredAmount);
         int targetUnits = requiredCents / 1000;
         boolean exactCandidate = requiredCents % 1000 == 0;
 
+        // Ignore denominations that are currently unavailable in the ATM.
         List<AtmNoteAllocationRow> usableAllocations = noteAllocations.stream()
                 .filter(a -> a.count() != null && a.count() > 0)
                 .toList();
@@ -31,6 +33,7 @@ public class NoteDispensingAlgorithm {
         int[] unitValues = new int[n];
         int[] maxCounts = new int[n];
 
+        // Prepare bounded denomination arrays for dynamic programming.
         for (int i = 0; i < n; i++) {
             unitValues[i] = noteValueToUnits(usableAllocations.get(i).denominationValue());
             maxCounts[i] = usableAllocations.get(i).count();
@@ -47,6 +50,7 @@ public class NoteDispensingAlgorithm {
         }
         dp[0][0] = 0;
 
+        // Bounded knapsack: minimize number of notes while respecting each denomination's count limit.
         for (int i = 1; i <= n; i++) {
             int value = unitValues[i - 1];
             int limit = maxCounts[i - 1];
@@ -75,6 +79,7 @@ public class NoteDispensingAlgorithm {
             }
         }
 
+        // Prefer exact payout; otherwise choose the best lower dispensable amount.
         int chosenUnits = -1;
         if (exactCandidate && dp[n][targetUnits] != INF) {
             chosenUnits = targetUnits;
@@ -91,6 +96,7 @@ public class NoteDispensingAlgorithm {
             return new DispenseComputation(false, BigDecimal.ZERO, List.of());
         }
 
+        // Rebuild denomination lines from DP choices and return exact flag + dispensed total.
         List<DispenseLine> lines = reconstructLines(usableAllocations, choice, unitValues, chosenUnits);
         BigDecimal dispensedAmount = unitsToAmount(chosenUnits);
         boolean exact = exactCandidate && chosenUnits == targetUnits;

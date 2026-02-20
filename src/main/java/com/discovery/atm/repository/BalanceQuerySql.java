@@ -1,5 +1,7 @@
 package com.discovery.atm.repository;
 
+import com.discovery.atm.constant.DomainConstants;
+
 public final class BalanceQuerySql {
 
     private BalanceQuerySql() {
@@ -29,19 +31,18 @@ public final class BalanceQuerySql {
               AND at.TRANSACTIONAL = TRUE
             """;
 
-    public static final String FIND_CURRENCY_ACCOUNTS_BY_CLIENT_ID_SQL = """
-            SELECT
-                ca.CLIENT_ACCOUNT_NUMBER,
-                ca.ACCOUNT_TYPE_CODE,
-                at.DESCRIPTION AS ACCOUNT_TYPE_DESCRIPTION,
-                ca.CURRENCY_CODE,
-                ca.DISPLAY_BALANCE,
-                ccr.CONVERSION_INDICATOR,
-                ccr.RATE
-            FROM CLIENT_ACCOUNT ca
-            JOIN ACCOUNT_TYPE at ON at.ACCOUNT_TYPE_CODE = ca.ACCOUNT_TYPE_CODE
-            LEFT JOIN CURRENCY_CONVERSION_RATE ccr ON ccr.CURRENCY_CODE = ca.CURRENCY_CODE
-            WHERE ca.CLIENT_ID = :clientId
-              AND ca.ACCOUNT_TYPE_CODE = 'CFCA'
-            """;
+    public static final String FIND_CURRENCY_ACCOUNTS_BY_CLIENT_ID_SQL =
+            "SELECT\n"
+                    + "    ca.CLIENT_ACCOUNT_NUMBER,\n"
+                    + "    ca.ACCOUNT_TYPE_CODE,\n"
+                    + "    at.DESCRIPTION AS ACCOUNT_TYPE_DESCRIPTION,\n"
+                    + "    ca.CURRENCY_CODE,\n"
+                    + "    ca.DISPLAY_BALANCE,\n"
+                    + "    ccr.CONVERSION_INDICATOR,\n"
+                    + "    ccr.RATE\n"
+                    + "FROM CLIENT_ACCOUNT ca\n"
+                    + "JOIN ACCOUNT_TYPE at ON at.ACCOUNT_TYPE_CODE = ca.ACCOUNT_TYPE_CODE\n"
+                    + "LEFT JOIN CURRENCY_CONVERSION_RATE ccr ON ccr.CURRENCY_CODE = ca.CURRENCY_CODE\n"
+                    + "WHERE ca.CLIENT_ID = :clientId\n"
+                    + "  AND ca.ACCOUNT_TYPE_CODE = '" + DomainConstants.ACCOUNT_TYPE_CFCA + "'";
 }
